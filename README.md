@@ -1,6 +1,6 @@
 # MorReview
 
-MorReview is a React/Vite study app for Honors Chemistry review. It gives students a simple unit picker, local PDF study guides, MP3 audio reviews, and focused review targets for each unit.
+MorReview is a React/Vite study app for Honors Chemistry review. It gives students a simple unit picker, local PDF study guides, MP3 audio reviews, focused review targets, and an interactive final-practice quiz.
 
 ## Features
 
@@ -8,6 +8,8 @@ MorReview is a React/Vite study app for Honors Chemistry review. It gives studen
 - Responsive desktop/sidebar and mobile/horizontal navigation
 - Local PDF viewer and MP3 playback for each unit
 - Unit skills, topic cards, and concept lists for quick review
+- Final-practice quiz with 239 multiple-choice questions pulled from the practice PDF
+- Quiz progress tracking, question jumping, answer selection, flagging, scoring, explanations, and reset
 - Lightweight analytics for session starts, heartbeats, exits, resource opens, and audio playback events
 - Netlify deployment with a Supabase-backed analytics function
 
@@ -39,8 +41,6 @@ Create a production build:
 npm run build
 ```
 
-# MorChem
-
 Preview the production build locally:
 
 ```bash
@@ -53,6 +53,8 @@ Study guides live in `public/resources` and are served by Vite/Netlify as static
 
 MP3 reviews can be added next to the PDFs using the same unit number, such as `public/resources/Unit8.mp3`.
 
+The final-practice quiz source PDF is stored as `public/resources/Final-Practice-Questions.pdf`, and the key is stored as `public/resources/Final-Practice-Answer-Key.pdf`. Parsed quiz data, answers, and explanations live in `src/data/finalPracticeQuiz.ts`.
+
 ## Project Structure
 
 ```text
@@ -61,6 +63,9 @@ src/
   components/
     Sidebar.tsx              Unit navigation
     ResourcePanel.tsx        PDF viewer, MP3 player, and topic display
+    QuizPanel.tsx            Final-practice quiz experience
+  data/
+    finalPracticeQuiz.ts     Parsed quiz questions from the practice PDF
   lib/
     analytics.ts             Browser analytics client
 netlify/
@@ -165,4 +170,3 @@ All routes redirect to `index.html` so the Vite app can handle client-side routi
 ## Notes
 
 The review PDFs are committed in `public/resources`. Large MP3 files are ignored by git by default; remove that ignore rule only if you want audio committed too.
-# MorChem

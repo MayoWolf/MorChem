@@ -11,7 +11,13 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ units, currentUnitId, onSelectUnit }) => {
   return (
     <nav className="sidebar">
-      <h2 className="sidebar-title">Units</h2>
+      <div className="sidebar-heading">
+        <span className="sidebar-icon" aria-hidden="true">≋</span>
+        <div>
+          <h2 className="sidebar-title">Units</h2>
+          <p>Honors Chem Curriculum</p>
+        </div>
+      </div>
       <ul className="unit-list">
         {units.map((unit) => (
           <li key={unit.id}>
@@ -26,6 +32,10 @@ const Sidebar: React.FC<SidebarProps> = ({ units, currentUnitId, onSelectUnit })
           </li>
         ))}
       </ul>
+      <div className="sidebar-footer">
+        <span>Final review</span>
+        <strong>Practice quiz</strong>
+      </div>
     </nav>
   );
 };

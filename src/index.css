@@ -1,18 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap');
+
 :root {
-  --chem-ink: #182735;
-  --chem-copper: #b85c38;
-  --chem-teal: #287d7b;
-  --chem-highlight: #f7c873;
-  --chem-paper: #f8faf7;
+  --chem-ink: #111f2a;
+  --chem-ink-soft: #3d4b56;
+  --chem-copper: #8c4f10;
+  --chem-copper-soft: #fdad67;
+  --chem-teal: #004e5b;
+  --chem-cyan: #adedfd;
+  --chem-highlight: #ffdcc2;
+  --chem-paper: #faf9f7;
+  --chem-surface: #ffffff;
+  --chem-surface-low: #f4f3f1;
+  --chem-surface-mid: #efeeec;
   --chem-mist: #eaf2ef;
-  --chem-border: #d8e0db;
-  --chem-muted: #52615f;
+  --chem-border: #c4c6cc;
+  --chem-border-soft: #e3e2e0;
+  --chem-muted: #596269;
+  --chem-error: #93000a;
+  --chem-error-bg: #ffdad6;
   
-  --shadow-panel: 0 4px 20px rgba(24, 39, 53, 0.08);
+  --shadow-panel: 0 12px 34px rgba(17, 31, 42, 0.08);
+  --shadow-soft: 0 4px 18px rgba(17, 31, 42, 0.06);
   --radius-panel: 8px;
   --radius-md: 8px;
+  --sidebar-width: 264px;
   
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Hanken Grotesk', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   line-height: 1.6;
   background-color: var(--chem-paper);
   color: var(--chem-ink);
@@ -27,25 +40,35 @@
 body {
   min-height: 100vh;
   display: flex;
-  background-image: 
-    linear-gradient(to right, rgba(40, 125, 123, 0.08) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(40, 125, 123, 0.08) 1px, transparent 1px);
-  background-size: 32px 32px;
+  background: var(--chem-paper);
 }
 
 #root {
   width: 100%;
 }
 
+button,
+input {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--chem-paper);
+  background: var(--chem-surface-mid);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--chem-copper);
-  border: 3px solid var(--chem-paper);
-  border-radius: 10px;
+  background: var(--chem-border);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--chem-muted);
 }

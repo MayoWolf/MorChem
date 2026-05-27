@@ -1,85 +1,200 @@
 .app-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 100vh;
   width: 100%;
+  background: var(--chem-paper);
+  color: var(--chem-ink);
 }
 
 .app-header {
-  background-color: var(--chem-ink);
-  color: #fff;
-  padding: 1.2rem 3rem;
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  min-height: 64px;
+  background: rgba(250, 249, 247, 0.96);
+  color: var(--chem-ink);
+  border-bottom: 1px solid var(--chem-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 5px solid var(--chem-copper);
-  z-index: 100;
-  box-shadow: 0 4px 15px rgba(20, 35, 48, 0.24);
-  flex-shrink: 0;
+  gap: 1.5rem;
+  padding: 0.75rem clamp(1.25rem, 4vw, 4rem);
+  backdrop-filter: blur(14px);
+}
+
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 0.75rem;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--chem-ink);
+  color: #fff;
+  font-family: 'Source Serif 4', serif;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.header-titles {
+  min-width: 0;
 }
 
 .app-header h1 {
   margin: 0;
-  font-size: 1.6rem;
-  font-weight: 800;
-  letter-spacing: 0;
+  color: var(--chem-ink);
+  font-family: 'Source Serif 4', serif;
+  font-size: 1.35rem;
+  font-weight: 750;
+  line-height: 1.1;
 }
 
 .app-header p {
-  margin: 0;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--chem-highlight);
+  margin: 0.1rem 0 0 0;
+  color: var(--chem-muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 650;
+  line-height: 1.25;
   text-transform: uppercase;
-  letter-spacing: 1px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.curriculum-search {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 220px;
+  border: 1px solid var(--chem-border-soft);
+  border-radius: 999px;
+  background: var(--chem-surface-low);
+  color: var(--chem-muted);
+  padding: 0.45rem 0.8rem;
+}
+
+.curriculum-search input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--chem-ink);
+  font-size: 0.92rem;
+}
+
+.curriculum-search input::placeholder {
+  color: var(--chem-muted);
+}
+
+.view-tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid var(--chem-border);
+  border-radius: 999px;
+  background: var(--chem-surface);
+  flex-shrink: 0;
+}
+
+.view-tab {
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--chem-ink-soft);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 750;
+  line-height: 1;
+  padding: 0.65rem 0.95rem;
+  white-space: nowrap;
+}
+
+.view-tab:hover {
+  background: var(--chem-surface-low);
+}
+
+.view-tab.active {
+  background: var(--chem-copper);
+  color: #fff;
 }
 
 .main-content {
   display: flex;
   flex: 1;
-  overflow: hidden;
+  min-height: 0;
+}
+
+.quiz-content {
+  justify-content: center;
 }
 
 .resource-area {
   flex: 1;
-  padding: 3rem;
+  min-width: 0;
+  padding: 2rem clamp(1.25rem, 4vw, 4rem) 4rem;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   -webkit-overflow-scrolling: touch;
 }
 
-/* Tablet / Small Desktop */
-@media (max-width: 1024px) {
+.quiz-area {
+  max-width: 1280px;
+  width: 100%;
+}
+
+.mobile-tabbar {
+  display: none;
+}
+
+@media (max-width: 980px) {
   .app-header {
-    padding: 1rem 1.5rem;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.75rem;
   }
-  
-  .resource-area {
-    padding: 2rem 1.5rem;
+
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .curriculum-search {
+    flex: 1;
+    min-width: 0;
   }
 }
 
-/* Mobile */
 @media (max-width: 768px) {
-  .app-container {
-    height: 100vh; /* Keep fixed height to allow internal scrolling */
+  .app-header {
+    padding: 0.85rem 1rem;
   }
 
-  .app-header {
-    padding: 0.8rem 1rem;
-    text-align: center;
-    flex-direction: column;
-    gap: 0.2rem;
+  .brand-mark {
+    width: 36px;
+    height: 36px;
   }
 
   .app-header h1 {
-    font-size: 1.2rem;
+    font-size: 1.15rem;
   }
 
   .app-header p {
-    font-size: 0.7rem;
+    display: none;
+  }
+
+  .header-actions {
+    display: none;
   }
 
   .main-content {
@@ -87,7 +202,49 @@
   }
 
   .resource-area {
-    padding: 1.5rem 1rem;
+    padding: 1.25rem 1rem 6.5rem;
     overflow-x: hidden;
+  }
+
+  .mobile-tabbar {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    border-top: 1px solid var(--chem-border);
+    background: rgba(250, 249, 247, 0.98);
+    padding: 0.55rem 1rem calc(0.55rem + env(safe-area-inset-bottom));
+    box-shadow: 0 -10px 28px rgba(17, 31, 42, 0.08);
+  }
+
+  .mobile-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    width: 88px;
+    min-height: 54px;
+    border: 0;
+    border-radius: var(--radius-panel);
+    background: transparent;
+    color: var(--chem-muted);
+    cursor: pointer;
+    font-size: 0.76rem;
+    font-weight: 800;
+  }
+
+  .mobile-tab span {
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+
+  .mobile-tab.active {
+    background: var(--chem-highlight);
+    color: var(--chem-copper);
   }
 }
