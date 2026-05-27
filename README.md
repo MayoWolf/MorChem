@@ -1,12 +1,12 @@
 # MorReview
 
-MorReview is a React/Vite study app for Honors Chemistry review. It gives students a simple unit picker, hosted PDF study guides, MP3 audio reviews, and focused review targets for each unit.
+MorReview is a React/Vite study app for Honors Chemistry review. It gives students a simple unit picker, local PDF study guides, MP3 audio reviews, and focused review targets for each unit.
 
 ## Features
 
-- Eight Honors Chemistry review units
+- Ten Honors Chemistry review units
 - Responsive desktop/sidebar and mobile/horizontal navigation
-- Hosted PDF viewer and MP3 playback for each unit
+- Local PDF viewer and MP3 playback for each unit
 - Unit skills, topic cards, and concept lists for quick review
 - Lightweight analytics for session starts, heartbeats, exits, resource opens, and audio playback events
 - Netlify deployment with a Supabase-backed analytics function
@@ -33,17 +33,13 @@ Start the local dev server:
 npm run dev
 ```
 
-Because PDFs and MP3s are served through a Netlify Function, use Netlify Dev when you need local resource playback:
-
-```bash
-netlify dev
-```
-
 Create a production build:
 
 ```bash
 npm run build
 ```
+
+# MorChem
 
 Preview the production build locally:
 
@@ -51,45 +47,11 @@ Preview the production build locally:
 npm run preview
 ```
 
-## Private Resource Configuration
+## Local Resource Configuration
 
-PDFs and MP3s are served through short-lived signed Cloudflare R2 URLs. The browser asks the Netlify function at `/.netlify/functions/resource-url?unit=1&type=pdf` or `/.netlify/functions/resource-url?unit=1&type=audio` for a temporary URL, and the source code does not include public resource URLs. The R2 bucket should be private, with public access disabled.
+Study guides live in `public/resources` and are served by Vite/Netlify as static files. The app currently points to `Unit8.pdf` through `Unit17.pdf`.
 
-For local development, create a `.env.local` file from `.env.example`:
-
-```bash
-cp .env.example .env.local
-```
-
-Set these private environment variables locally and in Netlify:
-
-```bash
-R2_ACCOUNT_ID=your_cloudflare_account_id
-R2_BUCKET_NAME=your_private_r2_bucket_name
-R2_ACCESS_KEY_ID=your_r2_access_key_id
-R2_SECRET_ACCESS_KEY=your_r2_secret_access_key
-R2_SIGNED_URL_EXPIRES_SECONDS=number_of_seconds
-R2_UNIT_1_PDF_KEY=unit_1_pdf_object_key
-R2_UNIT_1_AUDIO_KEY=unit_1_mp3_object_key
-R2_UNIT_2_PDF_KEY=unit_2_pdf_object_key
-R2_UNIT_2_AUDIO_KEY=unit_2_mp3_object_key
-R2_UNIT_3_PDF_KEY=unit_3_pdf_object_key
-R2_UNIT_3_AUDIO_KEY=unit_3_mp3_object_key
-R2_UNIT_4_PDF_KEY=unit_4_pdf_object_key
-R2_UNIT_4_AUDIO_KEY=unit_4_mp3_object_key
-R2_UNIT_5_PDF_KEY=unit_5_pdf_object_key
-R2_UNIT_5_AUDIO_KEY=unit_5_mp3_object_key
-R2_UNIT_6_PDF_KEY=unit_6_pdf_object_key
-R2_UNIT_6_AUDIO_KEY=unit_6_mp3_object_key
-R2_UNIT_7_PDF_KEY=unit_7_pdf_object_key
-R2_UNIT_7_AUDIO_KEY=unit_7_mp3_object_key
-R2_UNIT_8_PDF_KEY=unit_8_pdf_object_key
-R2_UNIT_8_AUDIO_KEY=unit_8_mp3_object_key
-```
-
-The `R2_UNIT_*_PDF_KEY` and `R2_UNIT_*_AUDIO_KEY` values are object keys inside the bucket, not public URLs. The signed URL still appears in browser network tools while the PDF or MP3 loads, but it expires after `R2_SIGNED_URL_EXPIRES_SECONDS`.
-
-Create an R2 API token/access key with object read access to the resource bucket. Do not use `VITE_` prefixes for these variables.
+MP3 reviews can be added next to the PDFs using the same unit number, such as `public/resources/Unit8.mp3`.
 
 ## Project Structure
 
@@ -104,9 +66,9 @@ src/
 netlify/
   functions/
     analytics.ts             Supabase analytics event ingestion
-    resource-url.ts          Short-lived R2 signed resource URL generation
 public/
   icon.jpg                   Site icon
+  resources/                 Local study guides and audio reviews
 ```
 
 ## Analytics Setup
@@ -184,7 +146,7 @@ The `metadata` JSON includes privacy-conscious product analytics details such as
 - Online/visibility state, visible seconds, and max scroll depth
 - Network quality hints when the browser exposes them
 - Audio duration, current time, percent listened, volume, mute state, playback rate, and listen milestones at 25%, 50%, 75%, and 90%
-- Resource type when a signed PDF link is opened
+- Resource type when a PDF link is opened
 
 The Netlify function falls back to the original core columns if Supabase has not been migrated to include `metadata`, but the richer analytics require the `metadata jsonb` column.
 
@@ -202,5 +164,5 @@ All routes redirect to `index.html` so the Vite app can handle client-side routi
 
 ## Notes
 
-The review PDFs and MP3s are loaded through signed R2 URLs. Large local resource files should stay out of git so the repository remains lightweight.
+The review PDFs are committed in `public/resources`. Large MP3 files are ignored by git by default; remove that ignore rule only if you want audio committed too.
 # MorChem
