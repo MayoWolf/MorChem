@@ -1,14 +1,14 @@
 # MorReview
 
-MorReview is a React/Vite study app for AP Human Geography unit review. It gives students a simple unit picker, hosted review videos, and College Board-style course framework topics for each unit.
+MorReview is a React/Vite study app for Honors Chemistry review. It gives students a simple unit picker, hosted PDF study guides, MP3 audio reviews, and focused review targets for each unit.
 
 ## Features
 
-- Seven AP Human Geography review units
+- Eight Honors Chemistry review units
 - Responsive desktop/sidebar and mobile/horizontal navigation
-- Hosted MP4 playback for each unit
-- Topic and concept cards for quick review
-- Lightweight analytics for session starts, heartbeats, exits, and video playback events
+- Hosted PDF viewer and MP3 playback for each unit
+- Unit skills, topic cards, and concept lists for quick review
+- Lightweight analytics for session starts, heartbeats, exits, resource opens, and audio playback events
 - Netlify deployment with a Supabase-backed analytics function
 
 ## Tech Stack
@@ -33,7 +33,7 @@ Start the local dev server:
 npm run dev
 ```
 
-Because videos are served through a Netlify Function, use Netlify Dev when you need local video playback:
+Because PDFs and MP3s are served through a Netlify Function, use Netlify Dev when you need local resource playback:
 
 ```bash
 netlify dev
@@ -51,9 +51,9 @@ Preview the production build locally:
 npm run preview
 ```
 
-## Private Video Configuration
+## Private Resource Configuration
 
-Videos are served through short-lived signed Cloudflare R2 URLs. The browser asks the Netlify function at `/.netlify/functions/video-url?unit=1` for a temporary playback URL, and the source code does not include public video URLs. The R2 bucket should be private, with public access disabled.
+PDFs and MP3s are served through short-lived signed Cloudflare R2 URLs. The browser asks the Netlify function at `/.netlify/functions/resource-url?unit=1&type=pdf` or `/.netlify/functions/resource-url?unit=1&type=audio` for a temporary URL, and the source code does not include public resource URLs. The R2 bucket should be private, with public access disabled.
 
 For local development, create a `.env.local` file from `.env.example`:
 
@@ -69,35 +69,42 @@ R2_BUCKET_NAME=your_private_r2_bucket_name
 R2_ACCESS_KEY_ID=your_r2_access_key_id
 R2_SECRET_ACCESS_KEY=your_r2_secret_access_key
 R2_SIGNED_URL_EXPIRES_SECONDS=number_of_seconds
-R2_UNIT_1_VIDEO_KEY=unit_1_object_key
-R2_UNIT_2_VIDEO_KEY=unit_2_object_key
-R2_UNIT_3_VIDEO_KEY=unit_3_object_key
-R2_UNIT_4_VIDEO_KEY=unit_4_object_key
-R2_UNIT_5_VIDEO_KEY=unit_5_object_key
-R2_UNIT_6_VIDEO_KEY=unit_6_object_key
-R2_UNIT_7_VIDEO_KEY=unit_7_object_key
+R2_UNIT_1_PDF_KEY=unit_1_pdf_object_key
+R2_UNIT_1_AUDIO_KEY=unit_1_mp3_object_key
+R2_UNIT_2_PDF_KEY=unit_2_pdf_object_key
+R2_UNIT_2_AUDIO_KEY=unit_2_mp3_object_key
+R2_UNIT_3_PDF_KEY=unit_3_pdf_object_key
+R2_UNIT_3_AUDIO_KEY=unit_3_mp3_object_key
+R2_UNIT_4_PDF_KEY=unit_4_pdf_object_key
+R2_UNIT_4_AUDIO_KEY=unit_4_mp3_object_key
+R2_UNIT_5_PDF_KEY=unit_5_pdf_object_key
+R2_UNIT_5_AUDIO_KEY=unit_5_mp3_object_key
+R2_UNIT_6_PDF_KEY=unit_6_pdf_object_key
+R2_UNIT_6_AUDIO_KEY=unit_6_mp3_object_key
+R2_UNIT_7_PDF_KEY=unit_7_pdf_object_key
+R2_UNIT_7_AUDIO_KEY=unit_7_mp3_object_key
+R2_UNIT_8_PDF_KEY=unit_8_pdf_object_key
+R2_UNIT_8_AUDIO_KEY=unit_8_mp3_object_key
 ```
 
-The `R2_UNIT_*_VIDEO_KEY` values are object keys inside the bucket, not public URLs. The signed URL still appears in browser network tools while the video plays, but it expires after `R2_SIGNED_URL_EXPIRES_SECONDS`.
+The `R2_UNIT_*_PDF_KEY` and `R2_UNIT_*_AUDIO_KEY` values are object keys inside the bucket, not public URLs. The signed URL still appears in browser network tools while the PDF or MP3 loads, but it expires after `R2_SIGNED_URL_EXPIRES_SECONDS`.
 
-Create an R2 API token/access key with object read access to the video bucket. Do not use `VITE_` prefixes for these variables.
+Create an R2 API token/access key with object read access to the resource bucket. Do not use `VITE_` prefixes for these variables.
 
 ## Project Structure
 
 ```text
 src/
   App.tsx                    Unit data and main app layout
-  config/
-    videoUrls.ts             Environment-backed video URL lookup
   components/
     Sidebar.tsx              Unit navigation
-    VideoPlayer.tsx          Video player and topic display
+    ResourcePanel.tsx        PDF viewer, MP3 player, and topic display
   lib/
     analytics.ts             Browser analytics client
 netlify/
   functions/
     analytics.ts             Supabase analytics event ingestion
-    video-url.ts             Short-lived R2 signed video URL generation
+    resource-url.ts          Short-lived R2 signed resource URL generation
 public/
   icon.jpg                   Site icon
 ```
@@ -125,7 +132,7 @@ create table analytics_events (
   session_id text not null,
   event_type text not null,
   path text not null,
-  video_unit integer,
+  resource_unit integer,
   seconds_since_start integer,
   referrer text,
   user_agent text,
@@ -139,8 +146,8 @@ create index analytics_events_session_created_at_idx
 create index analytics_events_event_created_at_idx
   on analytics_events (event_type, created_at desc);
 
-create index analytics_events_video_unit_created_at_idx
-  on analytics_events (video_unit, created_at desc);
+create index analytics_events_resource_unit_created_at_idx
+  on analytics_events (resource_unit, created_at desc);
 
 create index analytics_events_metadata_idx
   on analytics_events using gin (metadata);
@@ -162,11 +169,12 @@ Tracked event types:
 - `heartbeat`
 - `end`
 - `unit_select`
-- `video_loaded`
-- `video_play`
-- `video_pause`
-- `video_progress`
-- `video_ended`
+- `resource_opened`
+- `audio_loaded`
+- `audio_play`
+- `audio_pause`
+- `audio_progress`
+- `audio_ended`
 
 The `metadata` JSON includes privacy-conscious product analytics details such as:
 
@@ -175,7 +183,8 @@ The `metadata` JSON includes privacy-conscious product analytics details such as
 - Viewport, screen size, pixel ratio, language, timezone, and color scheme
 - Online/visibility state, visible seconds, and max scroll depth
 - Network quality hints when the browser exposes them
-- Video duration, current time, percent watched, volume, mute state, playback rate, and watch milestones at 25%, 50%, 75%, and 90%
+- Audio duration, current time, percent listened, volume, mute state, playback rate, and listen milestones at 25%, 50%, 75%, and 90%
+- Resource type when a signed PDF link is opened
 
 The Netlify function falls back to the original core columns if Supabase has not been migrated to include `metadata`, but the richer analytics require the `metadata jsonb` column.
 
@@ -193,4 +202,5 @@ All routes redirect to `index.html` so the Vite app can handle client-side routi
 
 ## Notes
 
-The review videos are loaded from hosted MP4 URLs in `src/App.tsx`. Large local video files are ignored by git so the repository stays lightweight.
+The review PDFs and MP3s are loaded through signed R2 URLs. Large local resource files should stay out of git so the repository remains lightweight.
+# MorChem
