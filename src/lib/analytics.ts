@@ -1,23 +1,24 @@
 const SESSION_KEY = 'mor_session_id';
 const START_TIME = Date.now();
 const PAGE_ID = crypto.randomUUID();
-const VIDEO_MILESTONES = [25, 50, 75, 90];
+const AUDIO_MILESTONES = [25, 50, 75, 90];
 
 type AnalyticsEventType =
   | 'start'
   | 'heartbeat'
   | 'end'
   | 'unit_select'
-  | 'video_loaded'
-  | 'video_play'
-  | 'video_pause'
-  | 'video_progress'
-  | 'video_ended';
+  | 'resource_opened'
+  | 'audio_loaded'
+  | 'audio_play'
+  | 'audio_pause'
+  | 'audio_progress'
+  | 'audio_ended';
 
 type AnalyticsMetadata = Record<string, unknown>;
 
 type AnalyticsOptions = {
-  videoUnit?: number;
+  resourceUnit?: number;
   useBeacon?: boolean;
   metadata?: AnalyticsMetadata;
 };
@@ -148,23 +149,23 @@ const getPageMetadata = (): AnalyticsMetadata => {
   };
 };
 
-const getVideoMetadata = (video?: HTMLVideoElement): AnalyticsMetadata => {
-  if (!video) {
+const getAudioMetadata = (audio?: HTMLAudioElement): AnalyticsMetadata => {
+  if (!audio) {
     return {};
   }
 
-  const duration = Number.isFinite(video.duration) ? video.duration : null;
-  const currentTime = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+  const duration = Number.isFinite(audio.duration) ? audio.duration : null;
+  const currentTime = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
   const percentWatched = duration ? clampPercent((currentTime / duration) * 100) : null;
 
   return {
-    video_current_time_seconds: Math.round(currentTime),
-    video_duration_seconds: duration ? Math.round(duration) : null,
-    video_percent_watched: percentWatched,
-    video_muted: video.muted,
-    video_volume: video.volume,
-    video_playback_rate: video.playbackRate,
-    video_ready_state: video.readyState,
+    audio_current_time_seconds: Math.round(currentTime),
+    audio_duration_seconds: duration ? Math.round(duration) : null,
+    audio_percent_listened: percentWatched,
+    audio_muted: audio.muted,
+    audio_volume: audio.volume,
+    audio_playback_rate: audio.playbackRate,
+    audio_ready_state: audio.readyState,
   };
 };
 
@@ -174,13 +175,13 @@ const getUnitMetadata = (unitTitle: string) => ({
 
 const sendEvent = (
   eventType: AnalyticsEventType,
-  { videoUnit, useBeacon = false, metadata = {} }: AnalyticsOptions = {},
+  { resourceUnit, useBeacon = false, metadata = {} }: AnalyticsOptions = {},
 ) => {
   const payload = {
     session_id: getSessionId(),
     event_type: eventType,
     path: `${window.location.pathname}${window.location.search}`,
-    video_unit: videoUnit ?? null,
+    resource_unit: resourceUnit ?? null,
     seconds_since_start: getSecondsSinceStart(),
     referrer: document.referrer || null,
     metadata: {
@@ -234,95 +235,109 @@ export const startAnalytics = () => {
 
 export const trackUnitSelect = (unit: number, title: string) => {
   sendEvent('unit_select', {
-    videoUnit: unit,
+    resourceUnit: unit,
     metadata: { unit_title: title },
   });
 };
 
-export const trackVideoLoaded = (
+export const trackResourceOpened = (
   unit: number,
   unitTitle: string,
-  video: HTMLVideoElement,
+  resourceType: 'pdf' | 'audio',
 ) => {
-  sendEvent('video_loaded', {
-    videoUnit: unit,
+  sendEvent('resource_opened', {
+    resourceUnit: unit,
     metadata: {
       ...getUnitMetadata(unitTitle),
-      ...getVideoMetadata(video),
+      resource_type: resourceType,
     },
   });
 };
 
-export const trackVideoPlay = (
+export const trackAudioLoaded = (
   unit: number,
   unitTitle: string,
-  video: HTMLVideoElement,
+  audio: HTMLAudioElement,
 ) => {
-  sendEvent('video_play', {
-    videoUnit: unit,
+  sendEvent('audio_loaded', {
+    resourceUnit: unit,
     metadata: {
       ...getUnitMetadata(unitTitle),
-      ...getVideoMetadata(video),
+      ...getAudioMetadata(audio),
     },
   });
 };
 
-export const trackVideoPause = (
+export const trackAudioPlay = (
   unit: number,
   unitTitle: string,
-  video: HTMLVideoElement,
+  audio: HTMLAudioElement,
 ) => {
-  if (video.ended) {
+  sendEvent('audio_play', {
+    resourceUnit: unit,
+    metadata: {
+      ...getUnitMetadata(unitTitle),
+      ...getAudioMetadata(audio),
+    },
+  });
+};
+
+export const trackAudioPause = (
+  unit: number,
+  unitTitle: string,
+  audio: HTMLAudioElement,
+) => {
+  if (audio.ended) {
     return;
   }
 
-  sendEvent('video_pause', {
-    videoUnit: unit,
+  sendEvent('audio_pause', {
+    resourceUnit: unit,
     metadata: {
       ...getUnitMetadata(unitTitle),
-      ...getVideoMetadata(video),
+      ...getAudioMetadata(audio),
     },
   });
 };
 
-export const trackVideoEnded = (
+export const trackAudioEnded = (
   unit: number,
   unitTitle: string,
-  video: HTMLVideoElement,
+  audio: HTMLAudioElement,
 ) => {
-  sendEvent('video_ended', {
-    videoUnit: unit,
+  sendEvent('audio_ended', {
+    resourceUnit: unit,
     metadata: {
       ...getUnitMetadata(unitTitle),
-      ...getVideoMetadata(video),
-      video_percent_watched: 100,
+      ...getAudioMetadata(audio),
+      audio_percent_listened: 100,
     },
   });
 };
 
-export const trackVideoProgress = (
+export const trackAudioProgress = (
   unit: number,
   unitTitle: string,
-  video: HTMLVideoElement,
+  audio: HTMLAudioElement,
   sentMilestones: Set<number>,
 ) => {
-  const duration = Number.isFinite(video.duration) ? video.duration : 0;
+  const duration = Number.isFinite(audio.duration) ? audio.duration : 0;
 
   if (duration <= 0) {
     return;
   }
 
-  const percentWatched = (video.currentTime / duration) * 100;
+  const percentListened = (audio.currentTime / duration) * 100;
 
-  VIDEO_MILESTONES.forEach((milestone) => {
-    if (percentWatched >= milestone && !sentMilestones.has(milestone)) {
+  AUDIO_MILESTONES.forEach((milestone) => {
+    if (percentListened >= milestone && !sentMilestones.has(milestone)) {
       sentMilestones.add(milestone);
-      sendEvent('video_progress', {
-        videoUnit: unit,
+      sendEvent('audio_progress', {
+        resourceUnit: unit,
         metadata: {
           ...getUnitMetadata(unitTitle),
-          ...getVideoMetadata(video),
-          video_milestone_percent: milestone,
+          ...getAudioMetadata(audio),
+          audio_milestone_percent: milestone,
         },
       });
     }

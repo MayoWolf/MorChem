@@ -5,7 +5,7 @@ type AnalyticsPayload = {
   session_id?: unknown;
   event_type?: unknown;
   path?: unknown;
-  video_unit?: unknown;
+  resource_unit?: unknown;
   seconds_since_start?: unknown;
   referrer?: unknown;
   metadata?: unknown;
@@ -16,11 +16,12 @@ const validEventTypes = new Set([
   'heartbeat',
   'end',
   'unit_select',
-  'video_loaded',
-  'video_play',
-  'video_pause',
-  'video_progress',
-  'video_ended',
+  'resource_opened',
+  'audio_loaded',
+  'audio_play',
+  'audio_pause',
+  'audio_progress',
+  'audio_ended',
 ]);
 
 const jsonResponse = (statusCode: number, body: Record<string, string>) => ({
@@ -113,7 +114,7 @@ export const handler: Handler = async (event) => {
       session_id: sessionId,
       event_type: eventType,
       path,
-      video_unit: asNullableNumber(data.video_unit),
+      resource_unit: asNullableNumber(data.resource_unit),
       seconds_since_start: secondsSinceStart,
       referrer: asNullableString(data.referrer),
       user_agent: userAgent,

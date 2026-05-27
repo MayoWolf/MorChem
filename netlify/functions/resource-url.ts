@@ -5,14 +5,29 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 const DEFAULT_EXPIRATION_SECONDS = 60 * 60;
 const MAX_EXPIRATION_SECONDS = 60 * 60 * 6;
 
-const videoKeysByUnit: Record<string, string | undefined> = {
-  '1': process.env.R2_UNIT_1_VIDEO_KEY,
-  '2': process.env.R2_UNIT_2_VIDEO_KEY,
-  '3': process.env.R2_UNIT_3_VIDEO_KEY,
-  '4': process.env.R2_UNIT_4_VIDEO_KEY,
-  '5': process.env.R2_UNIT_5_VIDEO_KEY,
-  '6': process.env.R2_UNIT_6_VIDEO_KEY,
-  '7': process.env.R2_UNIT_7_VIDEO_KEY,
+type ResourceType = 'pdf' | 'audio';
+
+const resourceKeysByUnit: Record<ResourceType, Record<string, string | undefined>> = {
+  pdf: {
+    '1': process.env.R2_UNIT_1_PDF_KEY,
+    '2': process.env.R2_UNIT_2_PDF_KEY,
+    '3': process.env.R2_UNIT_3_PDF_KEY,
+    '4': process.env.R2_UNIT_4_PDF_KEY,
+    '5': process.env.R2_UNIT_5_PDF_KEY,
+    '6': process.env.R2_UNIT_6_PDF_KEY,
+    '7': process.env.R2_UNIT_7_PDF_KEY,
+    '8': process.env.R2_UNIT_8_PDF_KEY,
+  },
+  audio: {
+    '1': process.env.R2_UNIT_1_AUDIO_KEY,
+    '2': process.env.R2_UNIT_2_AUDIO_KEY,
+    '3': process.env.R2_UNIT_3_AUDIO_KEY,
+    '4': process.env.R2_UNIT_4_AUDIO_KEY,
+    '5': process.env.R2_UNIT_5_AUDIO_KEY,
+    '6': process.env.R2_UNIT_6_AUDIO_KEY,
+    '7': process.env.R2_UNIT_7_AUDIO_KEY,
+    '8': process.env.R2_UNIT_8_AUDIO_KEY,
+  },
 };
 
 const jsonResponse = (statusCode: number, body: Record<string, unknown>) => ({
@@ -31,7 +46,7 @@ const getRequiredEnv = () => {
   const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
 
   if (!accountId || !bucketName || !accessKeyId || !secretAccessKey) {
-    throw new Error('R2 video signing environment variables are not configured.');
+    throw new Error('R2 resource signing environment variables are not configured.');
   }
 
   return { accountId, bucketName, accessKeyId, secretAccessKey };
@@ -53,10 +68,12 @@ export const handler: Handler = async (event) => {
   }
 
   const unit = event.queryStringParameters?.unit;
-  const objectKey = unit ? videoKeysByUnit[unit] : null;
+  const type = event.queryStringParameters?.type;
+  const resourceType = type === 'pdf' || type === 'audio' ? type : null;
+  const objectKey = unit && resourceType ? resourceKeysByUnit[resourceType][unit] : null;
 
-  if (!unit || !objectKey) {
-    return jsonResponse(400, { error: 'Unknown or unconfigured video unit.' });
+  if (!unit || !resourceType || !objectKey) {
+    return jsonResponse(400, { error: 'Unknown or unconfigured review resource.' });
   }
 
   try {
@@ -80,13 +97,14 @@ export const handler: Handler = async (event) => {
     return jsonResponse(200, {
       expires_at: new Date(Date.now() + expiresIn * 1000).toISOString(),
       expires_in: expiresIn,
+      type: resourceType,
       unit: Number(unit),
       url,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unexpected video signing error.';
+    const message = err instanceof Error ? err.message : 'Unexpected resource signing error.';
 
-    console.error('Video URL Error:', err);
+    console.error('Resource URL Error:', err);
     return jsonResponse(500, { error: message });
   }
 };

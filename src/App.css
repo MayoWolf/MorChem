@@ -6,15 +6,15 @@
 }
 
 .app-header {
-  background-color: var(--aphug-dark);
+  background-color: var(--chem-ink);
   color: #fff;
   padding: 1.2rem 3rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 5px solid var(--aphug-gold);
+  border-bottom: 5px solid var(--chem-copper);
   z-index: 100;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 15px rgba(20, 35, 48, 0.24);
   flex-shrink: 0;
 }
 
@@ -22,14 +22,14 @@
   margin: 0;
   font-size: 1.6rem;
   font-weight: 800;
-  letter-spacing: -0.5px;
+  letter-spacing: 0;
 }
 
 .app-header p {
   margin: 0;
   font-size: 0.9rem;
   font-weight: 500;
-  color: var(--aphug-gold);
+  color: var(--chem-highlight);
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -40,7 +40,7 @@
   overflow: hidden;
 }
 
-.video-area {
+.resource-area {
   flex: 1;
   padding: 3rem;
   overflow-y: auto;
@@ -56,7 +56,7 @@
     padding: 1rem 1.5rem;
   }
   
-  .video-area {
+  .resource-area {
     padding: 2rem 1.5rem;
   }
 }
@@ -86,7 +86,7 @@
     flex-direction: column;
   }
 
-  .video-area {
+  .resource-area {
     padding: 1.5rem 1rem;
     overflow-x: hidden;
   }

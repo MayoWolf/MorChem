@@ -15,9 +15,9 @@ dist-ssr
 .env.*
 !.env.example
 
-# Videos (Too large for GitHub)
-public/videos/*.mp4
-*.mp4
+# Review resources (too large for GitHub)
+public/resources/*.mp3
+*.mp3
 
 # Editor directories and files
 .vscode/*
