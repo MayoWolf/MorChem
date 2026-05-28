@@ -68,10 +68,7 @@
 }
 
 .resource-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 240px;
-  gap: 1rem;
-  align-items: start;
+  display: block;
 }
 
 .pdf-panel,
@@ -90,8 +87,7 @@
 .flashcard-panel {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding: 1rem;
+  overflow: hidden;
 }
 
 .section-heading {
@@ -176,7 +172,7 @@
 
 .flashcard {
   width: 100%;
-  min-height: 260px;
+  min-height: 300px;
   border: 1px solid var(--chem-border);
   border-radius: var(--radius-panel);
   background: var(--chem-surface-low);
@@ -188,6 +184,12 @@
   gap: 1rem;
   padding: 1rem;
   text-align: left;
+}
+
+.flashcard-body {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
 }
 
 .flashcard:hover {
@@ -211,13 +213,14 @@
 
 .flashcard strong {
   color: var(--chem-ink);
-  font-size: 1rem;
+  font-size: clamp(1.1rem, 2vw, 1.45rem);
   line-height: 1.45;
 }
 
 .flashcard-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(120px, 180px) minmax(120px, 180px);
+  justify-content: center;
   gap: 0.65rem;
 }
 
@@ -245,6 +248,8 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.65rem;
+  border-top: 1px solid var(--chem-border-soft);
+  padding: 1rem;
 }
 
 .study-meta div {
@@ -337,14 +342,6 @@
   .resource-panel-container {
     max-width: 820px;
   }
-
-  .resource-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .flashcard-panel {
-    order: -1;
-  }
 }
 
 @media (max-width: 768px) {
@@ -368,6 +365,14 @@
   .pdf-frame-shell {
     height: 62vh;
     min-height: 420px;
+  }
+
+  .flashcard {
+    min-height: 250px;
+  }
+
+  .flashcard-actions {
+    grid-template-columns: 1fr 1fr;
   }
 
   .pdf-toolbar {

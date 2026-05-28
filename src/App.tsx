@@ -4,7 +4,7 @@ import Sidebar from './components/Sidebar'
 import ResourcePanel from './components/ResourcePanel'
 import QuizPanel from './components/QuizPanel'
 import { pdfTextByPath } from './data/pdfTextIndex'
-import { startAnalytics, trackUnitSelect } from './lib/analytics'
+import { startAnalytics, trackUnitOpened, trackUnitSelect } from './lib/analytics'
 
 export interface Topic {
   id: string;
@@ -179,6 +179,12 @@ function App() {
   }, [searchQuery]);
 
   const displayedUnit = filteredUnits.find((unit) => unit.id === currentUnit.id) || filteredUnits[0];
+
+  useEffect(() => {
+    if (displayedUnit) {
+      trackUnitOpened(displayedUnit.id, displayedUnit.title);
+    }
+  }, [displayedUnit?.id, displayedUnit?.title]);
 
   const handleSelectUnit = (unit: Unit) => {
     trackUnitSelect(unit.id, unit.title);

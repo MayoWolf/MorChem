@@ -125,15 +125,17 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ unit }) => {
             />
           </div>
         </div>
+      </section>
 
-        <aside className="flashcard-panel">
-          <div className="section-heading compact">
-            <div>
-              <span className="resource-kicker">Flashcards</span>
-              <h3>PDF Review</h3>
-            </div>
+      <section className="flashcard-panel" aria-labelledby="flashcards-title">
+        <div className="section-heading">
+          <div>
+            <span className="resource-kicker">Flashcards</span>
+            <h3 id="flashcards-title">PDF Review</h3>
           </div>
+        </div>
 
+        <div className="flashcard-body">
           {currentCard && (
             <button
               type="button"
@@ -159,18 +161,18 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ unit }) => {
               Next
             </button>
           </div>
+        </div>
 
-          <div className="study-meta">
-            <div>
-              <span>Cards</span>
-              <strong>{flashcards.length}</strong>
-            </div>
-            <div>
-              <span>Skills</span>
-              <strong>{unit.skills.length}</strong>
-            </div>
+        <div className="study-meta">
+          <div>
+            <span>Cards</span>
+            <strong>{flashcards.length}</strong>
           </div>
-        </aside>
+          <div>
+            <span>Skills</span>
+            <strong>{unit.skills.length}</strong>
+          </div>
+        </div>
       </section>
 
       <section className="review-topics" aria-labelledby="review-targets-title">

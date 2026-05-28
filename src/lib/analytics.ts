@@ -7,7 +7,11 @@ type AnalyticsEventType =
   | 'heartbeat'
   | 'end'
   | 'unit_select'
-  | 'resource_opened';
+  | 'unit_opened'
+  | 'resource_opened'
+  | 'flashcard_revealed'
+  | 'flashcard_navigated'
+  | 'quiz_question_answered';
 
 type AnalyticsMetadata = Record<string, unknown>;
 
@@ -214,6 +218,13 @@ export const trackUnitSelect = (unit: number, title: string) => {
   });
 };
 
+export const trackUnitOpened = (unit: number, title: string) => {
+  sendEvent('unit_opened', {
+    resourceUnit: unit,
+    metadata: { unit_title: title },
+  });
+};
+
 export const trackResourceOpened = (
   unit: number,
   unitTitle: string,
@@ -224,6 +235,61 @@ export const trackResourceOpened = (
     metadata: {
       ...getUnitMetadata(unitTitle),
       resource_type: resourceType,
+    },
+  });
+};
+
+export const trackFlashcardRevealed = (
+  unit: number,
+  unitTitle: string,
+  cardIndex: number,
+  cardCount: number,
+) => {
+  sendEvent('flashcard_revealed', {
+    resourceUnit: unit,
+    metadata: {
+      ...getUnitMetadata(unitTitle),
+      flashcard_index: cardIndex,
+      flashcard_count: cardCount,
+    },
+  });
+};
+
+export const trackFlashcardNavigated = (
+  unit: number,
+  unitTitle: string,
+  direction: 'previous' | 'next',
+  cardIndex: number,
+  cardCount: number,
+) => {
+  sendEvent('flashcard_navigated', {
+    resourceUnit: unit,
+    metadata: {
+      ...getUnitMetadata(unitTitle),
+      flashcard_direction: direction,
+      flashcard_index: cardIndex,
+      flashcard_count: cardCount,
+    },
+  });
+};
+
+export const trackQuizQuestionAnswered = (
+  questionId: string,
+  questionIndex: number,
+  unitLabel: string,
+  sourceNumber: number,
+  selectedAnswer: string,
+  correctAnswer: string | undefined,
+) => {
+  sendEvent('quiz_question_answered', {
+    metadata: {
+      question_id: questionId,
+      question_index: questionIndex,
+      unit_label: unitLabel,
+      source_number: sourceNumber,
+      selected_answer: selectedAnswer,
+      correct_answer: correctAnswer ?? null,
+      is_correct: correctAnswer ? selectedAnswer === correctAnswer : null,
     },
   });
 };

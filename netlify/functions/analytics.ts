@@ -16,12 +16,11 @@ const validEventTypes = new Set([
   'heartbeat',
   'end',
   'unit_select',
+  'unit_opened',
   'resource_opened',
-  'audio_loaded',
-  'audio_play',
-  'audio_pause',
-  'audio_progress',
-  'audio_ended',
+  'flashcard_revealed',
+  'flashcard_navigated',
+  'quiz_question_answered',
 ]);
 
 const jsonResponse = (statusCode: number, body: Record<string, string>) => ({
