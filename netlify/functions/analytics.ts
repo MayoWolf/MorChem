@@ -23,7 +23,7 @@ const validEventTypes = new Set([
   'quiz_question_answered',
 ]);
 
-const jsonResponse = (statusCode: number, body: Record<string, string>) => ({
+const jsonResponse = (statusCode: number, body: Record<string, string | boolean>) => ({
   statusCode,
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify(body),
@@ -67,6 +67,17 @@ const isSupabaseAdminKey = (key: string) => {
   return decodeJwtPayload(key)?.role === 'service_role';
 };
 
+const getSupabaseKeyType = (key: string) => {
+  if (key.startsWith('sb_secret_')) return 'sb_secret';
+  if (key.startsWith('sb_publishable_')) return 'sb_publishable';
+
+  const role = decodeJwtPayload(key)?.role;
+  if (role === 'service_role') return 'legacy_service_role_jwt';
+  if (role === 'anon') return 'legacy_anon_jwt';
+
+  return 'invalid_or_unknown';
+};
+
 const parsePayload = (body: string | null): AnalyticsPayload => {
   if (!body) {
     throw new Error('Missing request body.');
@@ -105,6 +116,26 @@ const isMissingMetadataColumn = (error: { code?: string; message?: string }) => 
 };
 
 export const handler: Handler = async (event) => {
+  if (event.httpMethod === 'GET') {
+    const supabaseConfig = getRequiredEnv();
+
+    if (!supabaseConfig) {
+      return jsonResponse(200, {
+        ready: false,
+        supabase_url_configured: false,
+        supabase_key_configured: false,
+        supabase_key_type: 'missing',
+      });
+    }
+
+    return jsonResponse(200, {
+      ready: isSupabaseAdminKey(supabaseConfig.supabaseServiceKey),
+      supabase_url_configured: true,
+      supabase_key_configured: true,
+      supabase_key_type: getSupabaseKeyType(supabaseConfig.supabaseServiceKey),
+    });
+  }
+
   if (event.httpMethod !== 'POST') {
     return jsonResponse(405, { error: 'Method Not Allowed' });
   }

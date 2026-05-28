@@ -200,7 +200,14 @@ const sendEvent = (
       headers: {
         'Content-Type': 'application/json',
       },
-    }).catch((err) => console.error('Failed to send analytics', err));
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          const responseText = await response.text();
+          console.warn('Analytics rejected', response.status, responseText);
+        }
+      })
+      .catch((err) => console.error('Failed to send analytics', err));
   }
 };
 
