@@ -4,23 +4,20 @@ import './QuizPanel.css';
 
 type Answers = Record<string, string | undefined>;
 
-const sectionNames: Record<string, string> = {
-  'Chapter 12': 'Stoichiometry',
-  'Chapter 14': 'Gases',
-  'Chapter 15': 'Solutions',
-  'Chapter 16': 'Solution Properties',
-  'Chapter 17': 'Thermochemistry',
-  'Chapter 18': 'Reaction Rates and Equilibrium',
-  'Chapter 19': 'Acids and Bases',
-  'Chapter 20': 'Redox',
-  'Chapter 21': 'Electrochemistry',
-  'Chapter 25': 'Nuclear Chemistry',
+const unitLabelsByChapter: Record<string, string> = {
+  'Chapter 12': 'Unit 8',
+  'Chapter 14': 'Unit 10',
+  'Chapter 15': 'Unit 11',
+  'Chapter 16': 'Unit 12',
+  'Chapter 17': 'Unit 13',
+  'Chapter 18': 'Unit 14',
+  'Chapter 19': 'Unit 15',
+  'Chapter 20': 'Unit 16',
+  'Chapter 21': 'Unit 16',
+  'Chapter 25': 'Unit 17',
 };
 
-const getSectionLabel = (chapter: string) => {
-  const sectionName = sectionNames[chapter];
-  return sectionName ? `${chapter}: ${sectionName}` : chapter;
-};
+const getUnitLabel = (chapter: string) => unitLabelsByChapter[chapter] || chapter;
 
 const QuizPanel: React.FC = () => {
   const [currentIndex, setCurrentIndex] = React.useState(0);
@@ -30,6 +27,7 @@ const QuizPanel: React.FC = () => {
   const [isFinished, setIsFinished] = React.useState(false);
 
   const currentQuestion = finalPracticeQuiz[currentIndex];
+  const currentUnitLabel = getUnitLabel(currentQuestion.chapter);
   const selectedAnswer = answers[currentQuestion.id];
   const isCurrentRevealed = revealed.has(currentQuestion.id) || isFinished;
   const showFeedback = Boolean(selectedAnswer && isCurrentRevealed);
@@ -169,13 +167,13 @@ const QuizPanel: React.FC = () => {
 
           <article className="question-card">
             <div className="question-section-divider">
-              <span>{getSectionLabel(currentQuestion.chapter)}</span>
+              <span>{currentUnitLabel}</span>
             </div>
 
             <div className="question-meta">
-              <span>{currentQuestion.chapter}</span>
+              <span>{currentUnitLabel}</span>
               <span>Source #{currentQuestion.sourceNumber}</span>
-              <span>{showFeedback ? (currentIsCorrect ? 'Correct' : 'Needs Review') : selectedAnswer ? 'Answered' : 'Unanswered'}</span>
+              <span>{showFeedback ? (currentIsCorrect ? 'Correct' : 'Wrong') : selectedAnswer ? 'Answered' : 'Unanswered'}</span>
             </div>
 
             <h3>{currentQuestion.prompt}</h3>
@@ -211,7 +209,7 @@ const QuizPanel: React.FC = () => {
             {showFeedback && (
               <div className={`answer-explanation ${currentIsCorrect ? 'correct' : 'incorrect'}`} role="status">
                 <span className="quiz-kicker">
-                  {currentIsCorrect ? 'Correct' : 'Not Quite'} · Answer {currentQuestion.answer}
+                  {currentIsCorrect ? 'Correct' : 'Wrong'} · Answer {currentQuestion.answer}
                 </span>
                 <p>
                   {currentIsCorrect
@@ -277,13 +275,15 @@ const QuizPanel: React.FC = () => {
               const isReviewed = revealed.has(question.id) || isFinished;
               const isCorrect = isReviewed && answers[question.id] === question.answer;
               const isIncorrect = isReviewed && isAnswered && answers[question.id] !== question.answer;
-              const startsSection = index === 0 || finalPracticeQuiz[index - 1].chapter !== question.chapter;
+              const unitLabel = getUnitLabel(question.chapter);
+              const previousUnitLabel = index > 0 ? getUnitLabel(finalPracticeQuiz[index - 1].chapter) : null;
+              const startsSection = index === 0 || previousUnitLabel !== unitLabel;
 
               return (
                 <React.Fragment key={question.id}>
                   {startsSection && (
                     <div className="question-map-section">
-                      <span>{getSectionLabel(question.chapter)}</span>
+                      <span>{unitLabel}</span>
                     </div>
                   )}
                   <button

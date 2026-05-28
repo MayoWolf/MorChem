@@ -16,12 +16,6 @@ interface ResourcePanelProps {
 
 const getUnitDisplayTitle = (title: string) => title.split(': ').slice(1).join(': ') || title;
 
-const targetStatuses = [
-  { label: 'In Progress', tone: 'active' },
-  { label: 'Practice Next', tone: 'attention' },
-  { label: 'Review Later', tone: 'quiet' },
-];
-
 const ResourcePanel: React.FC<ResourcePanelProps> = ({ unit }) => {
   const progressMilestones = useRef(new Set<number>());
   const displayTitle = getUnitDisplayTitle(unit.title);
@@ -136,23 +130,18 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ unit }) => {
           </div>
         </div>
         <div className="topics-grid">
-          {unit.topics.map((topic, index) => {
-            const status = targetStatuses[index % targetStatuses.length];
-
-            return (
-              <article key={topic.id} className={`topic-card ${status.tone}`}>
-                <div className="topic-card-header">
-                  <h4 className="topic-name">Target {index + 1}: {topic.name}</h4>
-                  <span className="topic-status">{status.label}</span>
-                </div>
-                <ul className="concepts-list">
-                  {topic.concepts.map((concept) => (
-                    <li key={concept} className="concept-item">{concept}</li>
-                  ))}
-                </ul>
-              </article>
-            );
-          })}
+          {unit.topics.map((topic, index) => (
+            <article key={topic.id} className="topic-card">
+              <div className="topic-card-header">
+                <h4 className="topic-name">Target {index + 1}: {topic.name}</h4>
+              </div>
+              <ul className="concepts-list">
+                {topic.concepts.map((concept) => (
+                  <li key={concept} className="concept-item">{concept}</li>
+                ))}
+              </ul>
+            </article>
+          ))}
         </div>
       </section>
     </div>

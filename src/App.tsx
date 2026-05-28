@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, type ChangeEvent } from 'react'
 import './App.css'
 import Sidebar from './components/Sidebar'
 import ResourcePanel from './components/ResourcePanel'
 import QuizPanel from './components/QuizPanel'
+import { pdfTextByPath } from './data/pdfTextIndex'
 import { startAnalytics, trackUnitSelect } from './lib/analytics'
 
 export interface Topic {
@@ -147,14 +148,47 @@ const units: Unit[] = [
 function App() {
   const [currentUnit, setCurrentUnit] = useState<Unit>(units[0]);
   const [currentView, setCurrentView] = useState<'guides' | 'quiz'>('guides');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     return startAnalytics();
   }, []);
 
+  const filteredUnits = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    if (!normalizedQuery) {
+      return units;
+    }
+
+    return units.filter((unit) => {
+      const searchableText = [
+        `unit ${unit.id}`,
+        unit.title,
+        unit.description,
+        pdfTextByPath[unit.pdfPath] || '',
+        ...unit.skills,
+        ...unit.topics.flatMap((topic) => [
+          topic.id,
+          topic.name,
+          ...topic.concepts,
+        ]),
+      ].join(' ').toLowerCase();
+
+      return searchableText.includes(normalizedQuery);
+    });
+  }, [searchQuery]);
+
+  const displayedUnit = filteredUnits.find((unit) => unit.id === currentUnit.id) || filteredUnits[0];
+
   const handleSelectUnit = (unit: Unit) => {
     trackUnitSelect(unit.id, unit.title);
     setCurrentUnit(unit);
+  };
+
+  const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value);
+    setCurrentView('guides');
   };
 
   return (
@@ -170,7 +204,12 @@ function App() {
         <div className="header-actions">
           <label className="curriculum-search">
             <span aria-hidden="true">⌕</span>
-            <input type="search" placeholder="Search curriculum..." />
+            <input
+              type="search"
+              placeholder="Search curriculum..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+            />
           </label>
           <nav className="view-tabs" aria-label="Study mode">
             <button
@@ -192,9 +231,23 @@ function App() {
       </header>
       {currentView === 'guides' ? (
         <div className="main-content">
-          <Sidebar units={units} currentUnitId={currentUnit.id} onSelectUnit={handleSelectUnit} />
+          <Sidebar units={filteredUnits} currentUnitId={displayedUnit?.id ?? currentUnit.id} onSelectUnit={handleSelectUnit} />
           <main className="resource-area">
-            <ResourcePanel unit={currentUnit} />
+            {displayedUnit ? (
+              <>
+                {searchQuery.trim() && (
+                  <div className="search-meta" role="status">
+                    {filteredUnits.length} result{filteredUnits.length === 1 ? '' : 's'} for "{searchQuery.trim()}"
+                  </div>
+                )}
+                <ResourcePanel unit={displayedUnit} />
+              </>
+            ) : (
+              <section className="empty-search-state" role="status">
+                <h2>No matching units</h2>
+                <p>Try a unit number, skill, topic, or chemistry term.</p>
+              </section>
+            )}
           </main>
         </div>
       ) : (

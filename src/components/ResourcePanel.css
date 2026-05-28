@@ -15,7 +15,6 @@
 
 .unit-badge,
 .resource-kicker,
-.topic-status,
 .study-meta span {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.72rem;
@@ -243,24 +242,12 @@
   position: absolute;
   inset: 0 auto 0 0;
   width: 4px;
-  background: var(--chem-border);
-}
-
-.topic-card.active::before {
   background: var(--chem-teal);
-}
-
-.topic-card.attention::before {
-  background: var(--chem-copper);
-}
-
-.topic-card.quiet::before {
-  background: var(--chem-border);
 }
 
 .topic-card-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: flex-start;
   gap: 1rem;
   margin-bottom: 0.75rem;
@@ -272,19 +259,6 @@
   font-size: 1rem;
   font-weight: 800;
   line-height: 1.3;
-}
-
-.topic-status {
-  flex: 0 0 auto;
-  border-radius: 4px;
-  background: var(--chem-surface-mid);
-  color: var(--chem-muted);
-  padding: 0.25rem 0.45rem;
-}
-
-.topic-card.attention .topic-status {
-  background: var(--chem-error-bg);
-  color: var(--chem-error);
 }
 
 .concepts-list {
