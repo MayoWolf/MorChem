@@ -17,7 +17,6 @@ export interface Unit {
   title: string;
   description: string;
   pdfPath: string;
-  audioPath?: string;
   skills: string[];
   topics: Topic[];
 }
@@ -198,7 +197,7 @@ function App() {
           <span className="brand-mark" aria-hidden="true">M</span>
           <div className="header-titles">
             <h1>MorReview: Honors Chem</h1>
-            <p>Study guides, audio review, and final practice</p>
+            <p>Study guides, flashcards, and final practice</p>
           </div>
         </div>
         <div className="header-actions">

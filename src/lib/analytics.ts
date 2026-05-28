@@ -1,19 +1,13 @@
 const SESSION_KEY = 'mor_session_id';
 const START_TIME = Date.now();
 const PAGE_ID = crypto.randomUUID();
-const AUDIO_MILESTONES = [25, 50, 75, 90];
 
 type AnalyticsEventType =
   | 'start'
   | 'heartbeat'
   | 'end'
   | 'unit_select'
-  | 'resource_opened'
-  | 'audio_loaded'
-  | 'audio_play'
-  | 'audio_pause'
-  | 'audio_progress'
-  | 'audio_ended';
+  | 'resource_opened';
 
 type AnalyticsMetadata = Record<string, unknown>;
 
@@ -149,26 +143,6 @@ const getPageMetadata = (): AnalyticsMetadata => {
   };
 };
 
-const getAudioMetadata = (audio?: HTMLAudioElement): AnalyticsMetadata => {
-  if (!audio) {
-    return {};
-  }
-
-  const duration = Number.isFinite(audio.duration) ? audio.duration : null;
-  const currentTime = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
-  const percentWatched = duration ? clampPercent((currentTime / duration) * 100) : null;
-
-  return {
-    audio_current_time_seconds: Math.round(currentTime),
-    audio_duration_seconds: duration ? Math.round(duration) : null,
-    audio_percent_listened: percentWatched,
-    audio_muted: audio.muted,
-    audio_volume: audio.volume,
-    audio_playback_rate: audio.playbackRate,
-    audio_ready_state: audio.readyState,
-  };
-};
-
 const getUnitMetadata = (unitTitle: string) => ({
   unit_title: unitTitle,
 });
@@ -243,7 +217,7 @@ export const trackUnitSelect = (unit: number, title: string) => {
 export const trackResourceOpened = (
   unit: number,
   unitTitle: string,
-  resourceType: 'pdf' | 'audio',
+  resourceType: 'pdf',
 ) => {
   sendEvent('resource_opened', {
     resourceUnit: unit,
@@ -251,95 +225,5 @@ export const trackResourceOpened = (
       ...getUnitMetadata(unitTitle),
       resource_type: resourceType,
     },
-  });
-};
-
-export const trackAudioLoaded = (
-  unit: number,
-  unitTitle: string,
-  audio: HTMLAudioElement,
-) => {
-  sendEvent('audio_loaded', {
-    resourceUnit: unit,
-    metadata: {
-      ...getUnitMetadata(unitTitle),
-      ...getAudioMetadata(audio),
-    },
-  });
-};
-
-export const trackAudioPlay = (
-  unit: number,
-  unitTitle: string,
-  audio: HTMLAudioElement,
-) => {
-  sendEvent('audio_play', {
-    resourceUnit: unit,
-    metadata: {
-      ...getUnitMetadata(unitTitle),
-      ...getAudioMetadata(audio),
-    },
-  });
-};
-
-export const trackAudioPause = (
-  unit: number,
-  unitTitle: string,
-  audio: HTMLAudioElement,
-) => {
-  if (audio.ended) {
-    return;
-  }
-
-  sendEvent('audio_pause', {
-    resourceUnit: unit,
-    metadata: {
-      ...getUnitMetadata(unitTitle),
-      ...getAudioMetadata(audio),
-    },
-  });
-};
-
-export const trackAudioEnded = (
-  unit: number,
-  unitTitle: string,
-  audio: HTMLAudioElement,
-) => {
-  sendEvent('audio_ended', {
-    resourceUnit: unit,
-    metadata: {
-      ...getUnitMetadata(unitTitle),
-      ...getAudioMetadata(audio),
-      audio_percent_listened: 100,
-    },
-  });
-};
-
-export const trackAudioProgress = (
-  unit: number,
-  unitTitle: string,
-  audio: HTMLAudioElement,
-  sentMilestones: Set<number>,
-) => {
-  const duration = Number.isFinite(audio.duration) ? audio.duration : 0;
-
-  if (duration <= 0) {
-    return;
-  }
-
-  const percentListened = (audio.currentTime / duration) * 100;
-
-  AUDIO_MILESTONES.forEach((milestone) => {
-    if (percentListened >= milestone && !sentMilestones.has(milestone)) {
-      sentMilestones.add(milestone);
-      sendEvent('audio_progress', {
-        resourceUnit: unit,
-        metadata: {
-          ...getUnitMetadata(unitTitle),
-          ...getAudioMetadata(audio),
-          audio_milestone_percent: milestone,
-        },
-      });
-    }
   });
 };

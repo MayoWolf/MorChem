@@ -1,14 +1,8 @@
-import React, { useRef } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Unit } from '../App';
+import { pdfTextByPath } from '../data/pdfTextIndex';
 import './ResourcePanel.css';
-import {
-  trackAudioEnded,
-  trackAudioLoaded,
-  trackAudioPause,
-  trackAudioPlay,
-  trackAudioProgress,
-  trackResourceOpened,
-} from '../lib/analytics';
+import { trackResourceOpened } from '../lib/analytics';
 
 interface ResourcePanelProps {
   unit: Unit;
@@ -16,9 +10,75 @@ interface ResourcePanelProps {
 
 const getUnitDisplayTitle = (title: string) => title.split(': ').slice(1).join(': ') || title;
 
+type Flashcard = {
+  front: string;
+  back: string;
+};
+
+const cleanPdfChunk = (chunk: string) => (
+  chunk
+    .replace(/\s+/g, ' ')
+    .replace(/^Key Concepts:?/i, '')
+    .replace(/^Vocabulary Definitions?/i, 'Vocabulary')
+    .trim()
+);
+
+const getCardTopic = (text: string) => {
+  const beforeColon = text.split(':')[0]?.trim();
+  const firstWords = text.split(' ').slice(0, 5).join(' ').trim();
+  const topic = beforeColon && beforeColon.length <= 54 ? beforeColon : firstWords;
+  return topic.replace(/[.;,]$/, '');
+};
+
+const makeFlashcards = (unit: Unit): Flashcard[] => {
+  const pdfText = pdfTextByPath[unit.pdfPath] || '';
+  const pdfCards = pdfText
+    .split(/[●○]/)
+    .map(cleanPdfChunk)
+    .filter((chunk) => (
+      chunk.length >= 42
+      && /[.!?]/.test(chunk)
+      && !/^vocabulary\b/i.test(chunk)
+      && !/^key equations?\b/i.test(chunk)
+      && !/^practice problems?\b/i.test(chunk)
+      && !/study\s*guide key concepts/i.test(chunk)
+      && !/studyguide key concepts/i.test(chunk)
+    ))
+    .slice(0, 10)
+    .map((chunk) => ({
+      front: `What should you know about ${getCardTopic(chunk)}?`,
+      back: chunk,
+    }));
+
+  const topicCards = unit.topics.map((topic) => ({
+    front: `What are the main ideas in ${topic.name}?`,
+    back: topic.concepts.join('; '),
+  }));
+
+  return [...pdfCards, ...topicCards];
+};
+
 const ResourcePanel: React.FC<ResourcePanelProps> = ({ unit }) => {
-  const progressMilestones = useRef(new Set<number>());
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [isAnswerVisible, setIsAnswerVisible] = useState(false);
   const displayTitle = getUnitDisplayTitle(unit.title);
+  const flashcards = useMemo(() => makeFlashcards(unit), [unit]);
+  const currentCard = flashcards[currentCardIndex] || flashcards[0];
+
+  React.useEffect(() => {
+    setCurrentCardIndex(0);
+    setIsAnswerVisible(false);
+  }, [unit.id]);
+
+  const showPreviousCard = () => {
+    setCurrentCardIndex((current) => Math.max(0, current - 1));
+    setIsAnswerVisible(false);
+  };
+
+  const showNextCard = () => {
+    setCurrentCardIndex((current) => Math.min(flashcards.length - 1, current + 1));
+    setIsAnswerVisible(false);
+  };
 
   return (
     <div className="resource-panel-container">
@@ -66,53 +126,44 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ unit }) => {
           </div>
         </div>
 
-        <aside className="audio-panel">
+        <aside className="flashcard-panel">
           <div className="section-heading compact">
             <div>
-              <span className="resource-kicker">Audio</span>
-              <h3>Lecture Review</h3>
+              <span className="resource-kicker">Flashcards</span>
+              <h3>PDF Review</h3>
             </div>
           </div>
-          {unit.audioPath ? (
-            <audio
-              key={unit.audioPath}
-              controls
-              preload="metadata"
-              className="audio-player"
-              onLoadedMetadata={(event) => (
-                trackAudioLoaded(unit.id, unit.title, event.currentTarget)
-              )}
-              onPlay={(event) => (
-                trackAudioPlay(unit.id, unit.title, event.currentTarget)
-              )}
-              onPause={(event) => (
-                trackAudioPause(unit.id, unit.title, event.currentTarget)
-              )}
-              onTimeUpdate={(event) => (
-                trackAudioProgress(
-                  unit.id,
-                  unit.title,
-                  event.currentTarget,
-                  progressMilestones.current,
-                )
-              )}
-              onEnded={(event) => (
-                trackAudioEnded(unit.id, unit.title, event.currentTarget)
-              )}
+
+          {currentCard && (
+            <button
+              type="button"
+              className={`flashcard ${isAnswerVisible ? 'revealed' : ''}`}
+              onClick={() => setIsAnswerVisible((current) => !current)}
+              aria-live="polite"
             >
-              <source src={unit.audioPath} type="audio/mpeg" />
-              Your browser does not support the audio tag.
-            </audio>
-          ) : (
-            <div className="audio-state" role="status">
-              Audio can live at public/resources/Unit{unit.id}.mp3 when it is ready.
-            </div>
+              <span className="flashcard-count">
+                {currentCardIndex + 1} / {flashcards.length}
+              </span>
+              <strong>{isAnswerVisible ? currentCard.back : currentCard.front}</strong>
+              <span className="flashcard-hint">
+                {isAnswerVisible ? 'Click to hide answer' : 'Click to reveal answer'}
+              </span>
+            </button>
           )}
+
+          <div className="flashcard-actions">
+            <button type="button" onClick={showPreviousCard} disabled={currentCardIndex === 0}>
+              Previous
+            </button>
+            <button type="button" onClick={showNextCard} disabled={currentCardIndex === flashcards.length - 1}>
+              Next
+            </button>
+          </div>
 
           <div className="study-meta">
             <div>
-              <span>Targets</span>
-              <strong>{unit.topics.length}</strong>
+              <span>Cards</span>
+              <strong>{flashcards.length}</strong>
             </div>
             <div>
               <span>Skills</span>

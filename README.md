@@ -1,16 +1,16 @@
 # MorReview
 
-MorReview is a React/Vite study app for Honors Chemistry review. It gives students a simple unit picker, local PDF study guides, MP3 audio reviews, focused review targets, and an interactive final-practice quiz.
+MorReview is a React/Vite study app for Honors Chemistry review. It gives students a simple unit picker, local PDF study guides, PDF-generated flashcards, focused review targets, and an interactive final-practice quiz.
 
 ## Features
 
 - Ten Honors Chemistry review units
 - Responsive desktop/sidebar and mobile/horizontal navigation
-- Local PDF viewer and MP3 playback for each unit
+- Local PDF viewer and flashcards generated from each unit PDF
 - Unit skills, topic cards, and concept lists for quick review
 - Final-practice quiz with 239 multiple-choice questions pulled from the practice PDF
 - Quiz progress tracking, question jumping, answer selection, flagging, scoring, explanations, and reset
-- Lightweight analytics for session starts, heartbeats, exits, resource opens, and audio playback events
+- Lightweight analytics for session starts, heartbeats, exits, and resource opens
 - Netlify deployment with a Supabase-backed analytics function
 
 ## Tech Stack
@@ -51,7 +51,7 @@ npm run preview
 
 Study guides live in `public/resources` and are served by Vite/Netlify as static files. The app currently points to `Unit8.pdf` through `Unit17.pdf`.
 
-MP3 reviews can be added next to the PDFs using the same unit number, such as `public/resources/Unit8.mp3`.
+PDF text extracted from those guides powers both curriculum search and the flashcard deck for each unit.
 
 The final-practice quiz source PDF is stored as `public/resources/Final-Practice-Questions.pdf`, and the key is stored as `public/resources/Final-Practice-Answer-Key.pdf`. Parsed quiz data, answers, and explanations live in `src/data/finalPracticeQuiz.ts`.
 
@@ -62,7 +62,7 @@ src/
   App.tsx                    Unit data and main app layout
   components/
     Sidebar.tsx              Unit navigation
-    ResourcePanel.tsx        PDF viewer, MP3 player, and topic display
+    ResourcePanel.tsx        PDF viewer, flashcards, and topic display
     QuizPanel.tsx            Final-practice quiz experience
   data/
     finalPracticeQuiz.ts     Parsed quiz questions from the practice PDF
@@ -73,7 +73,7 @@ netlify/
     analytics.ts             Supabase analytics event ingestion
 public/
   icon.jpg                   Site icon
-  resources/                 Local study guides and audio reviews
+  resources/                 Local study guides
 ```
 
 ## Analytics Setup
@@ -137,11 +137,6 @@ Tracked event types:
 - `end`
 - `unit_select`
 - `resource_opened`
-- `audio_loaded`
-- `audio_play`
-- `audio_pause`
-- `audio_progress`
-- `audio_ended`
 
 The `metadata` JSON includes privacy-conscious product analytics details such as:
 
@@ -150,7 +145,6 @@ The `metadata` JSON includes privacy-conscious product analytics details such as
 - Viewport, screen size, pixel ratio, language, timezone, and color scheme
 - Online/visibility state, visible seconds, and max scroll depth
 - Network quality hints when the browser exposes them
-- Audio duration, current time, percent listened, volume, mute state, playback rate, and listen milestones at 25%, 50%, 75%, and 90%
 - Resource type when a PDF link is opened
 
 The Netlify function falls back to the original core columns if Supabase has not been migrated to include `metadata`, but the richer analytics require the `metadata jsonb` column.
@@ -169,4 +163,4 @@ All routes redirect to `index.html` so the Vite app can handle client-side routi
 
 ## Notes
 
-The review PDFs are committed in `public/resources`. Large MP3 files are ignored by git by default; remove that ignore rule only if you want audio committed too.
+The review PDFs are committed in `public/resources`.
