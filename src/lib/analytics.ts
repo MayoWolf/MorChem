@@ -302,6 +302,7 @@ export const trackFlashcardNavigated = (
 
 export const trackQuizQuestionAnswered = (
   questionId: string,
+  questionPrompt: string,
   questionIndex: number,
   unitLabel: string,
   sourceNumber: number,
@@ -314,6 +315,7 @@ export const trackQuizQuestionAnswered = (
     resourceUnit: resourceUnit ?? undefined,
     metadata: {
       question_id: questionId,
+      question_prompt: questionPrompt,
       question_index: questionIndex,
       unit_label: unitLabel,
       source_number: sourceNumber,

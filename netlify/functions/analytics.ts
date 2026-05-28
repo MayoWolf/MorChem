@@ -97,6 +97,9 @@ const asNullableString = (value: unknown) => (
 const asNullableNumber = (value: unknown) => (
   typeof value === 'number' && Number.isFinite(value) ? value : null
 );
+const asNullableBoolean = (value: unknown) => (
+  typeof value === 'boolean' ? value : null
+);
 const asMetadata = (value: unknown) => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return {};
@@ -113,6 +116,24 @@ const isMissingMetadataColumn = (error: { code?: string; message?: string }) => 
   const message = (error.message ?? '').toLowerCase();
 
   return error.code === 'PGRST204' || error.code === '42703' || message.includes('metadata');
+};
+
+const getHeader = (headers: Record<string, string | undefined>, name: string) => (
+  headers[name] || headers[name.toLowerCase()] || headers[name.toUpperCase()] || null
+);
+
+const getClientIpAddress = (headers: Record<string, string | undefined>) => {
+  const directIp = getHeader(headers, 'x-nf-client-connection-ip')
+    || getHeader(headers, 'client-ip')
+    || getHeader(headers, 'x-real-ip');
+
+  if (directIp) {
+    return directIp.trim();
+  }
+
+  const forwardedFor = getHeader(headers, 'x-forwarded-for');
+
+  return forwardedFor?.split(',')[0]?.trim() || null;
 };
 
 export const handler: Handler = async (event) => {
@@ -182,7 +203,8 @@ export const handler: Handler = async (event) => {
       },
     });
     const userAgent = event.headers['user-agent'] || 'unknown';
-    const metadata = {
+    const clientIpAddress = getClientIpAddress(event.headers);
+    const metadata: Record<string, unknown> = {
       ...asMetadata(data.metadata),
       server_received_at: new Date().toISOString(),
     };
@@ -193,7 +215,32 @@ export const handler: Handler = async (event) => {
       resource_unit: asNullableNumber(data.resource_unit),
       seconds_since_start: secondsSinceStart,
       referrer: asNullableString(data.referrer),
+      ip_address: clientIpAddress,
       user_agent: userAgent,
+      quiz_question_id: eventType === 'quiz_question_answered'
+        ? asNullableString(metadata.question_id)
+        : null,
+      quiz_question_prompt: eventType === 'quiz_question_answered'
+        ? asNullableString(metadata.question_prompt)
+        : null,
+      quiz_question_index: eventType === 'quiz_question_answered'
+        ? asNullableNumber(metadata.question_index)
+        : null,
+      quiz_unit_label: eventType === 'quiz_question_answered'
+        ? asNullableString(metadata.unit_label)
+        : null,
+      quiz_source_number: eventType === 'quiz_question_answered'
+        ? asNullableNumber(metadata.source_number)
+        : null,
+      quiz_selected_answer: eventType === 'quiz_question_answered'
+        ? asNullableString(metadata.selected_answer)
+        : null,
+      quiz_correct_answer: eventType === 'quiz_question_answered'
+        ? asNullableString(metadata.correct_answer)
+        : null,
+      quiz_is_correct: eventType === 'quiz_question_answered'
+        ? asNullableBoolean(metadata.is_correct)
+        : null,
     };
 
     const { error } = await supabase

@@ -82,6 +82,7 @@ const QuizPanel: React.FC = () => {
 
     trackQuizQuestionAnswered(
       currentQuestion.id,
+      currentQuestion.prompt,
       currentIndex + 1,
       currentUnitLabel,
       currentQuestion.sourceNumber,

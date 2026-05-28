@@ -106,7 +106,16 @@ create table analytics_events (
   resource_unit integer,
   seconds_since_start integer,
   referrer text,
+  ip_address inet,
   user_agent text,
+  quiz_question_id text,
+  quiz_question_prompt text,
+  quiz_question_index integer,
+  quiz_unit_label text,
+  quiz_source_number integer,
+  quiz_selected_answer text,
+  quiz_correct_answer text,
+  quiz_is_correct boolean,
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz default now()
 );
@@ -120,18 +129,49 @@ create index analytics_events_event_created_at_idx
 create index analytics_events_resource_unit_created_at_idx
   on analytics_events (resource_unit, created_at desc);
 
+create index analytics_events_ip_address_created_at_idx
+  on analytics_events (ip_address, created_at desc);
+
+create index analytics_events_quiz_question_created_at_idx
+  on analytics_events (quiz_question_id, created_at desc)
+  where event_type = 'quiz_question_answered';
+
+create index analytics_events_quiz_correct_created_at_idx
+  on analytics_events (quiz_is_correct, created_at desc)
+  where event_type = 'quiz_question_answered';
+
 create index analytics_events_metadata_idx
   on analytics_events using gin (metadata);
 ```
 
-If you already have the table from an older version, add the richer metadata column with:
+If you already have the table from an older version, add the richer columns with:
 
 ```sql
 alter table analytics_events
-  add column if not exists metadata jsonb not null default '{}'::jsonb;
+  add column if not exists metadata jsonb not null default '{}'::jsonb,
+  add column if not exists ip_address inet,
+  add column if not exists quiz_question_id text,
+  add column if not exists quiz_question_prompt text,
+  add column if not exists quiz_question_index integer,
+  add column if not exists quiz_unit_label text,
+  add column if not exists quiz_source_number integer,
+  add column if not exists quiz_selected_answer text,
+  add column if not exists quiz_correct_answer text,
+  add column if not exists quiz_is_correct boolean;
 
 create index if not exists analytics_events_metadata_idx
   on analytics_events using gin (metadata);
+
+create index if not exists analytics_events_ip_address_created_at_idx
+  on analytics_events (ip_address, created_at desc);
+
+create index if not exists analytics_events_quiz_question_created_at_idx
+  on analytics_events (quiz_question_id, created_at desc)
+  where event_type = 'quiz_question_answered';
+
+create index if not exists analytics_events_quiz_correct_created_at_idx
+  on analytics_events (quiz_is_correct, created_at desc)
+  where event_type = 'quiz_question_answered';
 ```
 
 Tracked event types:
@@ -153,6 +193,7 @@ The `metadata` JSON includes privacy-conscious product analytics details such as
 - Viewport, screen size, pixel ratio, language, timezone, and color scheme
 - Online/visibility state, visible seconds, and max scroll depth
 - Network quality hints when the browser exposes them
+- Visitor IP address from Netlify request headers
 - Resource type when a PDF link is opened
 - Unit title and unit number for unit, PDF, flashcard, and quiz events
 - Flashcard index, deck size, and navigation direction
