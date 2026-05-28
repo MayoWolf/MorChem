@@ -34,7 +34,7 @@ const getRequiredEnv = () => {
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error('Supabase analytics environment variables are not configured.');
+    return null;
   }
 
   return { supabaseUrl, supabaseServiceKey };
@@ -102,7 +102,13 @@ export const handler: Handler = async (event) => {
   }
 
   try {
-    const { supabaseUrl, supabaseServiceKey } = getRequiredEnv();
+    const supabaseConfig = getRequiredEnv();
+
+    if (!supabaseConfig) {
+      return jsonResponse(202, { message: 'Analytics skipped: Supabase is not configured.' });
+    }
+
+    const { supabaseUrl, supabaseServiceKey } = supabaseConfig;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const userAgent = event.headers['user-agent'] || 'unknown';
     const metadata = {

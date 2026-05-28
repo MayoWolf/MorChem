@@ -35,6 +35,7 @@ const navigatorWithConnection = navigator as Navigator & {
 let visibleStartedAt = document.visibilityState === 'visible' ? Date.now() : null;
 let visibleMilliseconds = 0;
 let maxScrollDepth = 0;
+const recentEventSentAtBySignature = new Map<string, number>();
 
 const clampPercent = (value: number) => Math.max(0, Math.min(100, Math.round(value)));
 
@@ -151,10 +152,29 @@ const getUnitMetadata = (unitTitle: string) => ({
   unit_title: unitTitle,
 });
 
+const getUnitNumberFromLabel = (unitLabel: string) => {
+  const match = unitLabel.match(/\d+/);
+  return match ? Number(match[0]) : null;
+};
+
 const sendEvent = (
   eventType: AnalyticsEventType,
   { resourceUnit, useBeacon = false, metadata = {} }: AnalyticsOptions = {},
 ) => {
+  const eventSignature = JSON.stringify({
+    eventType,
+    resourceUnit: resourceUnit ?? null,
+    metadata,
+  });
+  const now = Date.now();
+  const recentEventSentAt = recentEventSentAtBySignature.get(eventSignature) ?? 0;
+
+  if (!useBeacon && now - recentEventSentAt < 1500) {
+    return;
+  }
+
+  recentEventSentAtBySignature.set(eventSignature, now);
+
   const payload = {
     session_id: getSessionId(),
     event_type: eventType,
@@ -281,7 +301,10 @@ export const trackQuizQuestionAnswered = (
   selectedAnswer: string,
   correctAnswer: string | undefined,
 ) => {
+  const resourceUnit = getUnitNumberFromLabel(unitLabel);
+
   sendEvent('quiz_question_answered', {
+    resourceUnit: resourceUnit ?? undefined,
     metadata: {
       question_id: questionId,
       question_index: questionIndex,

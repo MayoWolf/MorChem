@@ -10,7 +10,7 @@ MorReview is a React/Vite study app for Honors Chemistry review. It gives studen
 - Unit skills, topic cards, and concept lists for quick review
 - Final-practice quiz with 239 multiple-choice questions pulled from the practice PDF
 - Quiz progress tracking, question jumping, answer selection, flagging, scoring, explanations, and reset
-- Lightweight analytics for session starts, heartbeats, exits, and resource opens
+- Lightweight analytics for session starts, unit opens, flashcards, quiz checks, and resource opens
 - Netlify deployment with a Supabase-backed analytics function
 
 ## Tech Stack
@@ -91,6 +91,8 @@ SUPABASE_URL=your_supabase_project_url
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
+Until those variables are set, the analytics function returns a clean skipped response instead of creating Netlify function errors.
+
 The function writes to a Supabase table named `analytics_events`. A compatible table shape is:
 
 ```sql
@@ -136,7 +138,11 @@ Tracked event types:
 - `heartbeat`
 - `end`
 - `unit_select`
+- `unit_opened`
 - `resource_opened`
+- `flashcard_revealed`
+- `flashcard_navigated`
+- `quiz_question_answered`
 
 The `metadata` JSON includes privacy-conscious product analytics details such as:
 
@@ -146,6 +152,9 @@ The `metadata` JSON includes privacy-conscious product analytics details such as
 - Online/visibility state, visible seconds, and max scroll depth
 - Network quality hints when the browser exposes them
 - Resource type when a PDF link is opened
+- Unit title and unit number for unit, PDF, flashcard, and quiz events
+- Flashcard index, deck size, and navigation direction
+- Quiz question ID, source number, selected answer, correct answer, and whether the choice was correct
 
 The Netlify function falls back to the original core columns if Supabase has not been migrated to include `metadata`, but the richer analytics require the `metadata jsonb` column.
 

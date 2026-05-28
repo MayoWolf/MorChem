@@ -1,5 +1,6 @@
 import React from 'react';
 import { finalPracticeQuiz } from '../data/finalPracticeQuiz';
+import { trackQuizQuestionAnswered } from '../lib/analytics';
 import './QuizPanel.css';
 
 type Answers = Record<string, string | undefined>;
@@ -78,6 +79,15 @@ const QuizPanel: React.FC = () => {
       next.add(currentQuestion.id);
       return next;
     });
+
+    trackQuizQuestionAnswered(
+      currentQuestion.id,
+      currentIndex + 1,
+      currentUnitLabel,
+      currentQuestion.sourceNumber,
+      selectedAnswer,
+      currentQuestion.answer,
+    );
 
     return true;
   };

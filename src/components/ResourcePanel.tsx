@@ -2,7 +2,11 @@ import React, { useMemo, useState } from 'react';
 import { Unit } from '../App';
 import { pdfTextByPath } from '../data/pdfTextIndex';
 import './ResourcePanel.css';
-import { trackResourceOpened } from '../lib/analytics';
+import {
+  trackFlashcardNavigated,
+  trackFlashcardRevealed,
+  trackResourceOpened,
+} from '../lib/analytics';
 
 interface ResourcePanelProps {
   unit: Unit;
@@ -71,13 +75,25 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ unit }) => {
   }, [unit.id]);
 
   const showPreviousCard = () => {
-    setCurrentCardIndex((current) => Math.max(0, current - 1));
+    const nextIndex = Math.max(0, currentCardIndex - 1);
+    setCurrentCardIndex(nextIndex);
     setIsAnswerVisible(false);
+    trackFlashcardNavigated(unit.id, unit.title, 'previous', nextIndex + 1, flashcards.length);
   };
 
   const showNextCard = () => {
-    setCurrentCardIndex((current) => Math.min(flashcards.length - 1, current + 1));
+    const nextIndex = Math.min(flashcards.length - 1, currentCardIndex + 1);
+    setCurrentCardIndex(nextIndex);
     setIsAnswerVisible(false);
+    trackFlashcardNavigated(unit.id, unit.title, 'next', nextIndex + 1, flashcards.length);
+  };
+
+  const toggleFlashcardAnswer = () => {
+    if (!isAnswerVisible) {
+      trackFlashcardRevealed(unit.id, unit.title, currentCardIndex + 1, flashcards.length);
+    }
+
+    setIsAnswerVisible((current) => !current);
   };
 
   return (
@@ -121,7 +137,6 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ unit }) => {
               className="pdf-frame"
               src={`${unit.pdfPath}#toolbar=1&navpanes=0`}
               title={`${unit.title} PDF review`}
-              onLoad={() => trackResourceOpened(unit.id, unit.title, 'pdf')}
             />
           </div>
         </div>
@@ -140,7 +155,7 @@ const ResourcePanel: React.FC<ResourcePanelProps> = ({ unit }) => {
             <button
               type="button"
               className={`flashcard ${isAnswerVisible ? 'revealed' : ''}`}
-              onClick={() => setIsAnswerVisible((current) => !current)}
+              onClick={toggleFlashcardAnswer}
               aria-live="polite"
             >
               <span className="flashcard-count">
