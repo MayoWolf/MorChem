@@ -29,6 +29,25 @@ const jsonResponse = (statusCode: number, body: Record<string, string>) => ({
   body: JSON.stringify(body),
 });
 
+const decodeJwtPayload = (token: string) => {
+  const [, payload] = token.split('.');
+
+  if (!payload) {
+    return null;
+  }
+
+  try {
+    const normalizedPayload = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const decodedPayload = Buffer
+      .from(normalizedPayload, 'base64')
+      .toString('utf8');
+
+    return JSON.parse(decodedPayload) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+};
+
 const getRequiredEnv = () => {
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -38,6 +57,14 @@ const getRequiredEnv = () => {
   }
 
   return { supabaseUrl, supabaseServiceKey };
+};
+
+const isSupabaseAdminKey = (key: string) => {
+  if (key.startsWith('sb_secret_')) {
+    return true;
+  }
+
+  return decodeJwtPayload(key)?.role === 'service_role';
 };
 
 const parsePayload = (body: string | null): AnalyticsPayload => {
@@ -109,7 +136,20 @@ export const handler: Handler = async (event) => {
     }
 
     const { supabaseUrl, supabaseServiceKey } = supabaseConfig;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    if (!isSupabaseAdminKey(supabaseServiceKey)) {
+      return jsonResponse(500, {
+        error: 'SUPABASE_SERVICE_ROLE_KEY must be a Supabase secret key beginning with sb_secret_ or the legacy service_role JWT.',
+      });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    });
     const userAgent = event.headers['user-agent'] || 'unknown';
     const metadata = {
       ...asMetadata(data.metadata),
@@ -136,6 +176,8 @@ export const handler: Handler = async (event) => {
           .insert([row]);
 
         if (fallbackError) throw fallbackError;
+      } else if (error.code === '42501') {
+        throw new Error('Supabase RLS rejected analytics insert. Check that SUPABASE_SERVICE_ROLE_KEY is a Supabase secret key beginning with sb_secret_ or the legacy service_role JWT.');
       } else {
         throw error;
       }

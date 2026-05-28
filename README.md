@@ -88,8 +88,10 @@ Set these environment variables in Netlify:
 
 ```bash
 SUPABASE_URL=your_supabase_project_url
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_secret_or_service_role_key
 ```
+
+`SUPABASE_SERVICE_ROLE_KEY` must be either the current Supabase secret key that starts with `sb_secret_` or the legacy `service_role` JWT from Supabase Project Settings -> API Keys. Do not use the `anon public` key, publishable key, database password, or connection string here, because row-level security will reject inserts.
 
 Until those variables are set, the analytics function returns a clean skipped response instead of creating Netlify function errors.
 
